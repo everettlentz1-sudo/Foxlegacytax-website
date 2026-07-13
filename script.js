@@ -381,11 +381,124 @@
       }, 250);
     }
 
-    function matchIntent(text) {
-      for (var i = 0; i < intents.length; i++) {
-        if (intents[i].re.test(text)) return answers[intents[i].key];
+    /* ----- Situation-aware composer -----
+       Detects WHO the client is (rental owner, self-employed, investor, family…)
+       and WHAT they want (maximize, plan, file), then builds a tailored answer:
+       acknowledge → show specific value → recommend a tier → invite to book. */
+
+    var situations = [
+      {
+        key: 'rental',
+        re: /(rental|rent out|landlord|airbnb|vrbo|investment propert|duplex|tenant)/i,
+        weight: 2,
+        value: 'Rental properties are one of the biggest places people leave money on the table — depreciation alone is often worth thousands, plus repairs, mileage, insurance, and the passive-loss rules that DIY software regularly fumbles.'
+      },
+      {
+        key: 'selfemp',
+        re: /(self.?employ|freelanc|1099 income|contractor|side (gig|hustle)|small business|my business|own a business|llc|s.?corp|payroll|bookkeep)/i,
+        weight: 2,
+        value: 'Self-employment opens up deductions W-2 folks never see — home office, mileage, equipment, health insurance, retirement contributions — and we make sure quarterly estimates don’t bite you in April.'
+      },
+      {
+        key: 'investor',
+        re: /(stock|crypto|capital gain|brokerage|dividend|sold (some )?shares|k-?1)/i,
+        weight: 1,
+        value: 'Investment income means capital-gains treatment, loss harvesting, and cost-basis cleanup — small details that swing your bill by real money.'
+      },
+      {
+        key: 'family',
+        re: /(kids?\b|child|dependent|daycare|childcare|married|spouse|new baby)/i,
+        weight: 0,
+        value: 'Families qualify for more than they think — the Child Tax Credit, childcare credit, and earned income credit are exactly the kind of money that goes unclaimed every year.'
+      },
+      {
+        key: 'home',
+        re: /(bought a (house|home)|homeowner|mortgage|homestead|property tax)/i,
+        weight: 0,
+        value: 'Homeownership brings mortgage interest, property-tax deductions, and Wisconsin’s Homestead Credit into play.'
+      },
+      {
+        key: 'student',
+        re: /(student|tuition|college|university|1098-?t)/i,
+        weight: 0,
+        value: 'Education credits — up to $2,500 with the American Opportunity Credit — are among the most commonly missed money on a return.'
+      },
+      {
+        key: 'retire',
+        re: /(retir|social security|pension|\bira\b|401k)/i,
+        weight: 1,
+        value: 'Retirement income has its own playbook — how you draw down accounts and time Social Security genuinely changes what you owe.'
       }
-      return answers.fallback;
+    ];
+
+    function tierPitch(totalWeight, hasBusiness) {
+      var pitch;
+      if (totalWeight >= 3) {
+        pitch = 'With this many moving pieces, you’re a textbook fit for our <strong>Premier tier ($495)</strong> — consultations whenever you need them, plus direct coordination with your financial advisor, so every piece is pulling in the same direction.';
+      } else if (totalWeight >= 1) {
+        pitch = 'Based on that, you’d fit best in our <strong>Advisory tier ($295)</strong> — your return done right, plus up to 4 planning check-ins through the year so we’re maximizing <em>before</em> year-end, not after. (If you also work with a financial advisor, <strong>Premier ($495)</strong> loops them in directly.)';
+      } else {
+        pitch = 'Our <strong>Essential tier ($175)</strong> would cover you nicely — a clean, accurate return with every credit you qualify for. Want check-ins through the year too? That’s <strong>Advisory ($295)</strong>.';
+      }
+      if (hasBusiness) {
+        pitch += ' And if you need bookkeeping or payroll handled, <strong>Business Essentials</strong> attaches to any tier at a flat $50/hour — you only pay for time you use.';
+      }
+      return pitch;
+    }
+
+    function composeSituation(text) {
+      var matched = situations.filter(function (s) { return s.re.test(text); });
+      if (!matched.length) return null;
+
+      var wantsMax = /(maximize|max out|bigger|biggest|most money|more back|keep more|best (refund|return)|get the most|lower my tax|owe less|save)/i.test(text);
+
+      var opener = wantsMax
+        ? 'Yes — and maximizing it is exactly what we’re good at.'
+        : 'Yes, we can absolutely help with that.';
+
+      var totalWeight = 0;
+      var hasBusiness = false;
+      var valuePoints = [];
+      matched.slice(0, 3).forEach(function (s) {
+        totalWeight += s.weight;
+        if (s.key === 'selfemp') hasBusiness = true;
+        valuePoints.push(s.value);
+      });
+
+      var html =
+        opener + ' ' + valuePoints.join('<br><br>') +
+        '<br><br>' + tierPitch(totalWeight, hasBusiness) +
+        '<br><br>Let’s set up a free meeting — bring last year’s return and we’ll show you exactly what we’d do differently. No pressure, no obligation, and you’ll leave with a real number.<br>' + BOOK_CTA;
+
+      return { key: 'situation:' + matched.map(function (s) { return s.key; }).join('+'), html: html };
+    }
+
+    /* Repetition guard: never give the same speech twice in a row. */
+    var lastKey = null;
+
+    var repeatNudge =
+      'Short version: this one’s worth a real conversation. The consultation is free, you’ll get an exact quote before we start, and you’ll leave knowing your best move — no pressure, no obligation.<br>' +
+      BOOK_CTA + '<br>Or just call us at ' + CALL_LINK + ' — a person will pick up.';
+
+    function respond(text) {
+      var hit = composeSituation(text);
+
+      if (!hit) {
+        for (var i = 0; i < intents.length; i++) {
+          if (intents[i].re.test(text)) {
+            hit = { key: intents[i].key, html: answers[intents[i].key] };
+            break;
+          }
+        }
+      }
+      if (!hit) hit = { key: 'fallback', html: answers.fallback };
+
+      if (hit.key === lastKey && hit.key !== 'fallback' && hit.key !== 'greeting') {
+        lastKey = hit.key;
+        return repeatNudge;
+      }
+      lastKey = hit.key;
+      return hit.html;
     }
 
     quickChips.forEach(function (label) {
@@ -395,7 +508,13 @@
       chip.textContent = label;
       chip.addEventListener('click', function () {
         addMessage(label, 'user');
-        botReply(answers[chipToKey[label]]);
+        var key = chipToKey[label];
+        if (key === lastKey) {
+          botReply(repeatNudge);
+        } else {
+          lastKey = key;
+          botReply(answers[key]);
+        }
       });
       chipsEl.appendChild(chip);
     });
@@ -405,7 +524,7 @@
       var text = input.value.trim();
       if (!text) return;
       addMessage(text, 'user');
-      botReply(matchIntent(text));
+      botReply(respond(text));
       input.value = '';
     });
 
