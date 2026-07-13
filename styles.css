@@ -245,6 +245,9 @@ p { margin: 0 0 1em; }
   height: 54px;
   width: auto;
   max-width: 240px;
+  /* The logo art sits on a black plate; screen-blending drops the plate into
+     the dark header/footer so only the white script and gold star show. */
+  mix-blend-mode: screen;
 }
 
 @media (max-width: 480px) {

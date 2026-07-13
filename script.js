@@ -301,7 +301,7 @@
       person:
         'You bet — we’re real people right here in Oshkosh. Call or text ' + CALL_LINK + ', email <a href="mailto:info@foxlegacytax.com">info@foxlegacytax.com</a>, or just stop in — walk-ins welcome. Prefer a set time so you don’t wait? Grab one here:<br>' + BOOK_CTA,
       hours:
-        'We’re in Oshkosh, WI — open <strong>Mon–Fri 9:00 AM–5:00 PM</strong>, Saturdays by appointment, closed Sundays. Details and directions are on the <a href="contact.html">contact page</a>.<br><br>' +
+        'You’ll find us at <strong>230 N Koeller St, Oshkosh, WI</strong> — open <strong>Mon–Fri 8:00 AM–6:00 PM</strong> and <strong>Sat 9:00 AM–3:00 PM</strong>, closed Sundays. Directions and a map are on the <a href="contact.html">contact page</a>.<br><br>' +
         'Want to guarantee a spot instead of chancing a walk-in? Booking takes about 30 seconds:<br>' + BOOK_CTA,
       business:
         'You’re in the right place — helping small business owners is a big part of what we do. <strong>Business Essentials</strong> covers bookkeeping, payroll, business strategy, and new-business setup at a flat <strong>$50/hour, billed only for the time you use</strong>. Flat-fee firms charge $150–500 a month whether you need it or not; with us you pay for actual work. <a href="business.html">See how it works</a>.<br><br>' +
