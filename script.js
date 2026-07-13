@@ -262,57 +262,103 @@
     var form = root.querySelector('.chat-input-row');
     var input = root.querySelector('#flt-chat-input');
 
+    var BOOK_CTA =
+      '<a class="chat-cta" href="' + BOOKING_URL + '" target="_blank" rel="noopener">Book a free appointment</a>';
+    var CALL_LINK = '<a href="tel:+19203851190">(920) 385-1190</a>';
+
     var quickChips = [
       'Pricing & tiers',
       'Book an appointment',
       "Where's my refund?",
+      "I'm a new client",
       'Make a payment',
       'Talk to a person'
     ];
 
     var answers = {
       pricing:
-        'Our prep starts at three transparent tiers: <strong>Essential $175</strong>, <strong>Advisory $295</strong>, and <strong>Premier $495</strong> — add-ons are always disclosed up front. No surprises, ever. ' +
-        'You can <a href="services.html">compare tiers</a> or try the <a href="services.html#estimator">price estimator</a>.',
+        'Fair question — and unlike a lot of firms, we’ll actually answer it. We have three transparent tiers: <strong>Essential ($175)</strong> for a clean, accurate return; <strong>Advisory ($295)</strong> if you also want check-ins through the year; and <strong>Premier ($495)</strong> for support whenever you need it, including coordination with your financial advisor. Add-ons depend on your situation, but every one is disclosed before we start — no surprises, ever.<br><br>' +
+        'You can <a href="services.html">compare the tiers</a>, try the <a href="services.html#estimator">price estimator</a>, or better yet — sit down with us for free and we’ll quote your exact price on the spot.<br>' + BOOK_CTA,
       book:
-        'Happy to get you on the calendar! <a href="' + BOOKING_URL + '" target="_blank" rel="noopener">Pick a time here</a> — consultations are free. Walk-ins are welcome too.',
-      refund:
-        'You can check your federal refund at <a href="https://www.irs.gov/wheres-my-refund" target="_blank" rel="noopener">IRS: Where’s My Refund</a> and your Wisconsin refund at the <a href="https://www.revenue.wi.gov/Pages/Apps/TaxReturnStatus.aspx" target="_blank" rel="noopener">WI Dept. of Revenue</a>. Have your SSN, filing status, and refund amount handy.',
+        'That’s the best move — a quick, free conversation and you’ll know exactly where you stand. Pick whatever time works for you, and if you’d rather just stop in, walk-ins are always welcome.<br>' + BOOK_CTA,
+      refundStatus:
+        'If you’ve already filed, here’s where to check on your money:<br><br>' +
+        '&bull; <strong>Federal:</strong> <a href="https://www.irs.gov/wheres-my-refund" target="_blank" rel="noopener">IRS “Where’s My Refund”</a><br>' +
+        '&bull; <strong>Wisconsin:</strong> <a href="https://www.revenue.wi.gov/Pages/Apps/TaxReturnStatus.aspx" target="_blank" rel="noopener">WI Dept. of Revenue refund tracker</a><br><br>' +
+        'Have your SSN, filing status, and exact refund amount handy. If it’s been more than 21 days on a federal e-file (or something looks stuck), don’t wrestle with the IRS alone — bring it to us and we’ll help you figure out what’s going on.<br>' + BOOK_CTA,
+      refundMax:
+        'Love to hear it — that’s literally our job. The difference between an okay refund and your <em>best</em> refund usually comes down to credits and deductions people don’t know they qualify for: earned income credit, education credits, homestead credit, retirement contributions, and more.<br><br>' +
+        'The surest way to keep more of what you earned is to sit down with a professional who will actually dig for those — and the consultation is free. Bring last year’s return and we’ll tell you straight if there’s money being left on the table.<br>' + BOOK_CTA,
       payment:
-        'You can <a href="payment.html">pay your invoice securely online</a> through Converge, our payment processor. You can also pay in office or from your refund.',
+        'Paying your Fox Legacy invoice is easy, and you’ve got three ways to do it:<br><br>' +
+        '&bull; <a href="payment.html">Pay securely online</a> through Converge, our payment processor<br>' +
+        '&bull; Pay in office by card, check, or cash<br>' +
+        '&bull; Or have your fee taken right out of your refund — nothing out of pocket<br><br>' +
+        'Questions about your invoice? Call us at ' + CALL_LINK + ' and a person will pick up.',
       portal:
-        'Your documents live in our secure client portal. <a href="' + PORTAL_URL + '" target="_blank" rel="noopener">Sign in here</a> to upload or view files any time.',
+        'Your documents live in our secure client portal — it’s the safest way to get us your W-2s, 1099s, and anything else (much safer than email). <a href="' + PORTAL_URL + '" target="_blank" rel="noopener">Sign in here</a> to upload or view files any time.<br><br>' +
+        'First time using it, or not sure what documents we need? Book a quick appointment and we’ll walk you through the whole checklist.<br>' + BOOK_CTA,
       person:
-        'You bet — call or text us at <a href="tel:+19203851190">(920) 385-1190</a>, email <a href="mailto:info@foxlegacytax.com">info@foxlegacytax.com</a>, or just stop in. Walk-ins welcome!',
+        'You bet — we’re real people right here in Oshkosh. Call or text ' + CALL_LINK + ', email <a href="mailto:info@foxlegacytax.com">info@foxlegacytax.com</a>, or just stop in — walk-ins welcome. Prefer a set time so you don’t wait? Grab one here:<br>' + BOOK_CTA,
       hours:
-        'We’re in Oshkosh, WI — open Mon–Fri 9:00 AM–5:00 PM, Saturdays by appointment. Call us at <a href="tel:+19203851190">(920) 385-1190</a> or see the <a href="contact.html">contact page</a>.',
+        'We’re in Oshkosh, WI — open <strong>Mon–Fri 9:00 AM–5:00 PM</strong>, Saturdays by appointment, closed Sundays. Details and directions are on the <a href="contact.html">contact page</a>.<br><br>' +
+        'Want to guarantee a spot instead of chancing a walk-in? Booking takes about 30 seconds:<br>' + BOOK_CTA,
       business:
-        'For business owners we offer <strong>Business Essentials</strong> — bookkeeping, payroll, strategy, and new-business setup at a flat $50/hour, billed only for time used. <a href="business.html">See how it works</a>.',
-      resources:
-        'Check our <a href="resources.html">client resources</a> — due dates, an appointment checklist, record retention guidance, and a W-4 withholding checkup.',
+        'You’re in the right place — helping small business owners is a big part of what we do. <strong>Business Essentials</strong> covers bookkeeping, payroll, business strategy, and new-business setup at a flat <strong>$50/hour, billed only for the time you use</strong>. Flat-fee firms charge $150–500 a month whether you need it or not; with us you pay for actual work. <a href="business.html">See how it works</a>.<br><br>' +
+        'Every business is different, so the free consultation is where this gets real — bring your books (messy is fine, we’ve seen worse) and we’ll map out what you actually need.<br>' + BOOK_CTA,
+      newclient:
+        'Welcome — you’re going to like how simple this is. Here’s the whole process:<br><br>' +
+        '<strong>1.</strong> Book a free appointment (or walk in)<br>' +
+        '<strong>2.</strong> Bring your documents — W-2s, 1099s, last year’s return if you have it<br>' +
+        '<strong>3.</strong> We prepare your return, explain it in plain English, and quote your exact price before we start<br><br>' +
+        'That’s it. No surprises, ever — and we don’t disappear on April 16.<br>' + BOOK_CTA,
+      documents:
+        'Great question — showing up prepared makes everything faster. The basics: photo ID, Social Security cards for you and any dependents, all W-2s and 1099s, and last year’s return if you have it. Depending on your situation: mortgage interest statements, tuition forms (1098-T), childcare costs, and charitable donations. The full list is in our <a href="resources.html">appointment checklist</a>.<br><br>' +
+        'Not sure what applies to you? That’s exactly what the free consultation is for:<br>' + BOOK_CTA,
+      irsLetter:
+        'First: don’t panic, and don’t ignore it — IRS letters have deadlines, and most issues are very fixable when they’re handled early. Don’t call the IRS cold or pay anything until you understand what they’re actually asking.<br><br>' +
+        'Bring the letter to us (unopened is fine!). We’ll read it, translate it into plain English, and tell you exactly what happens next. This is truly a “talk to a professional” moment:<br>' + BOOK_CTA,
+      amended:
+        'If something was missed or wrong on a return you already filed — yours or one another preparer did — an amended return can often recover money you were owed. We handle amendments for a flat <strong>$80</strong>, and we’ll tell you up front whether it’s worth filing before you spend a dime.<br><br>' +
+        'Bring the return in question to a free consultation and we’ll take a look:<br>' + BOOK_CTA,
+      deadline:
+        'Key dates: federal and Wisconsin individual returns are generally due <strong>April 15</strong>; quarterly estimated payments hit in April, June, September, and January; and extensions give you until October 15 to <em>file</em> (but not to pay). The full rundown is on our <a href="resources.html">resources page</a>.<br><br>' +
+        'Behind or cutting it close? Don’t stress — that’s what we’re here for. The sooner we talk, the more options you have:<br>' + BOOK_CTA,
+      planning:
+        'Now you’re thinking like our favorite kind of client — <strong>plan ahead, not after</strong>. Mid-year moves (adjusting your W-4, timing deductions, retirement contributions, estimated payments) are where real tax savings happen; by filing season most of it is locked in.<br><br>' +
+        'Our Advisory tier includes up to 4 check-ins a year, and Premier gets you support whenever you need it. Start with a free conversation about where you stand:<br>' + BOOK_CTA,
       greeting:
-        'Hi there! I can point you to pricing, booking, refund tracking, payments, or the client portal. What do you need?',
+        'Hi there! I can help with pricing, booking an appointment, tracking your refund, payments, the client portal, or what to bring. What do you need today?',
       fallback:
-        'I want to make sure you get a real answer, not a runaround. Try one of the buttons below, or call us at <a href="tel:+19203851190">(920) 385-1190</a> — a person will pick up.'
+        'I want to make sure you get a real answer, not a runaround. Try one of the buttons below, call us at ' + CALL_LINK + ' — a person will pick up — or grab a free appointment and ask us everything in one sitting:<br>' + BOOK_CTA
     };
 
+    /* Order matters: more specific patterns first. */
     var intents = [
-      { re: /(price|pricing|cost|fee|charge|how much|estimat|tier|package)/i, key: 'pricing' },
-      { re: /(refund|where.?s my (money|refund)|return status)/i, key: 'refund' },
-      { re: /(book|appoint|schedul|consult|meet)/i, key: 'book' },
+      { re: /(where.?s?\s*(is\s*)?my\s*(refund|money)|refund status|track(ing)?\s*(my)?\s*refund|check\s*(on\s*)?(my)?\s*refund|still waiting|hasn.?t (come|arrived))/i, key: 'refundStatus' },
+      { re: /(bigger|best|biggest|max|more money back|get a refund|want (a|my) refund|maximize|owe less|keep more)/i, key: 'refundMax' },
+      { re: /refund/i, key: 'refundStatus' },
+      { re: /(irs|audit|letter|notice|cp\d+|garnish|levy|lien|back tax)/i, key: 'irsLetter' },
+      { re: /(amend|fix (my|a) return|made a mistake|wrong on my return|missed (a|some))/i, key: 'amended' },
+      { re: /(deadline|due date|late|extension|behind|didn.?t file|haven.?t filed|quarterly)/i, key: 'deadline' },
+      { re: /(plan(ning)?|strategy|withhold|w-?4|next year|save on tax|reduce my tax|lower my tax)/i, key: 'planning' },
+      { re: /(new client|first time|never (been|filed)|how (do|does) (i|it|this) (start|work)|get started|where do i start)/i, key: 'newclient' },
+      { re: /(what (do|should) i bring|documents? (do i )?need|checklist|paperwork|what to bring)/i, key: 'documents' },
+      { re: /(price|pricing|cost|fee|charge|how much|estimat|tier|package|rate)/i, key: 'pricing' },
+      { re: /(book|appoint|schedul|consult|meet|come in|sign up)/i, key: 'book' },
       { re: /(portal|upload|document|file|w-?2|1099|secure)/i, key: 'portal' },
-      { re: /(pay|payment|invoice|bill|owe)/i, key: 'payment' },
-      { re: /(hour|open|location|address|where are|directions)/i, key: 'hours' },
-      { re: /(person|human|call|phone|talk|speak|someone)/i, key: 'person' },
-      { re: /(business|bookkeep|payroll|llc|self.?employ|start.?up|rental)/i, key: 'business' },
-      { re: /(due date|deadline|checklist|record|retention|withhold|w-?4|resource)/i, key: 'resources' },
+      { re: /\b(pay|pays|paying|payment|invoice|bill|owe)\b/i, key: 'payment' },
+      { re: /(hour|open|location|address|where are|directions|parking)/i, key: 'hours' },
+      { re: /(person|human|call|phone|talk|speak|someone|real)/i, key: 'person' },
+      { re: /(business|bookkeep|payroll|llc|self.?employ|start.?up|rental|side (gig|hustle)|contractor)/i, key: 'business' },
       { re: /^(hi|hey|hello|howdy|good (morning|afternoon|evening))\b/i, key: 'greeting' }
     ];
 
     var chipToKey = {
       'Pricing & tiers': 'pricing',
       'Book an appointment': 'book',
-      "Where's my refund?": 'refund',
+      "Where's my refund?": 'refundStatus',
+      "I'm a new client": 'newclient',
       'Make a payment': 'payment',
       'Talk to a person': 'person'
     };
