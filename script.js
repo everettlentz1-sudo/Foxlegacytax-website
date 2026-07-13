@@ -226,10 +226,177 @@
     });
   }
 
+  /* ---------- Client helper chatbot ---------- */
+  /* Rules-based guide — no API keys, no monthly cost, works on any static host. */
+  function initChatbot() {
+    var BOOKING_URL = 'https://calendar.app.google/As5t43ddRw9j4L8s5';
+    var PORTAL_URL = 'https://foxlegacytax.securefilepro.com/portal/#/login';
+
+    var root = document.createElement('div');
+    root.id = 'flt-chat';
+    root.innerHTML =
+      '<button type="button" class="chat-launcher" aria-expanded="false" aria-controls="flt-chat-panel" aria-label="Chat with us">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>' +
+      '</button>' +
+      '<div class="chat-panel" id="flt-chat-panel" role="dialog" aria-label="Fox Legacy Tax assistant" hidden>' +
+        '<div class="chat-head">' +
+          '<strong>Fox Legacy Assistant</strong>' +
+          '<span>Here to point you the right way</span>' +
+          '<button type="button" class="chat-close" aria-label="Close chat">&times;</button>' +
+        '</div>' +
+        '<div class="chat-messages" aria-live="polite"></div>' +
+        '<div class="chat-chips" role="group" aria-label="Quick questions"></div>' +
+        '<form class="chat-input-row">' +
+          '<label class="visually-hidden" for="flt-chat-input">Type your question</label>' +
+          '<input id="flt-chat-input" type="text" placeholder="Type a question&hellip;" autocomplete="off">' +
+          '<button type="submit" class="chat-send" aria-label="Send">&#10148;</button>' +
+        '</form>' +
+      '</div>';
+    document.body.appendChild(root);
+
+    var launcher = root.querySelector('.chat-launcher');
+    var panel = root.querySelector('.chat-panel');
+    var closeBtn = root.querySelector('.chat-close');
+    var messagesEl = root.querySelector('.chat-messages');
+    var chipsEl = root.querySelector('.chat-chips');
+    var form = root.querySelector('.chat-input-row');
+    var input = root.querySelector('#flt-chat-input');
+
+    var quickChips = [
+      'Pricing & tiers',
+      'Book an appointment',
+      "Where's my refund?",
+      'Make a payment',
+      'Talk to a person'
+    ];
+
+    var answers = {
+      pricing:
+        'Our prep starts at three transparent tiers: <strong>Essential $175</strong>, <strong>Advisory $295</strong>, and <strong>Premier $495</strong> — add-ons are always disclosed up front. No surprises, ever. ' +
+        'You can <a href="services.html">compare tiers</a> or try the <a href="services.html#estimator">price estimator</a>.',
+      book:
+        'Happy to get you on the calendar! <a href="' + BOOKING_URL + '" target="_blank" rel="noopener">Pick a time here</a> — consultations are free. Walk-ins are welcome too.',
+      refund:
+        'You can check your federal refund at <a href="https://www.irs.gov/wheres-my-refund" target="_blank" rel="noopener">IRS: Where’s My Refund</a> and your Wisconsin refund at the <a href="https://www.revenue.wi.gov/Pages/Apps/TaxReturnStatus.aspx" target="_blank" rel="noopener">WI Dept. of Revenue</a>. Have your SSN, filing status, and refund amount handy.',
+      payment:
+        'You can <a href="payment.html">pay your invoice securely online</a> through Converge, our payment processor. You can also pay in office or from your refund.',
+      portal:
+        'Your documents live in our secure client portal. <a href="' + PORTAL_URL + '" target="_blank" rel="noopener">Sign in here</a> to upload or view files any time.',
+      person:
+        'You bet — call or text us at <a href="tel:+19203851190">(920) 385-1190</a>, email <a href="mailto:info@foxlegacytax.com">info@foxlegacytax.com</a>, or just stop in. Walk-ins welcome!',
+      hours:
+        'We’re in Oshkosh, WI — open Mon–Fri 9:00 AM–5:00 PM, Saturdays by appointment. Call us at <a href="tel:+19203851190">(920) 385-1190</a> or see the <a href="contact.html">contact page</a>.',
+      business:
+        'For business owners we offer <strong>Business Essentials</strong> — bookkeeping, payroll, strategy, and new-business setup at a flat $50/hour, billed only for time used. <a href="business.html">See how it works</a>.',
+      resources:
+        'Check our <a href="resources.html">client resources</a> — due dates, an appointment checklist, record retention guidance, and a W-4 withholding checkup.',
+      greeting:
+        'Hi there! I can point you to pricing, booking, refund tracking, payments, or the client portal. What do you need?',
+      fallback:
+        'I want to make sure you get a real answer, not a runaround. Try one of the buttons below, or call us at <a href="tel:+19203851190">(920) 385-1190</a> — a person will pick up.'
+    };
+
+    var intents = [
+      { re: /(price|pricing|cost|fee|charge|how much|estimat|tier|package)/i, key: 'pricing' },
+      { re: /(refund|where.?s my (money|refund)|return status)/i, key: 'refund' },
+      { re: /(book|appoint|schedul|consult|meet)/i, key: 'book' },
+      { re: /(portal|upload|document|file|w-?2|1099|secure)/i, key: 'portal' },
+      { re: /(pay|payment|invoice|bill|owe)/i, key: 'payment' },
+      { re: /(hour|open|location|address|where are|directions)/i, key: 'hours' },
+      { re: /(person|human|call|phone|talk|speak|someone)/i, key: 'person' },
+      { re: /(business|bookkeep|payroll|llc|self.?employ|start.?up|rental)/i, key: 'business' },
+      { re: /(due date|deadline|checklist|record|retention|withhold|w-?4|resource)/i, key: 'resources' },
+      { re: /^(hi|hey|hello|howdy|good (morning|afternoon|evening))\b/i, key: 'greeting' }
+    ];
+
+    var chipToKey = {
+      'Pricing & tiers': 'pricing',
+      'Book an appointment': 'book',
+      "Where's my refund?": 'refund',
+      'Make a payment': 'payment',
+      'Talk to a person': 'person'
+    };
+
+    function addMessage(html, who) {
+      var bubble = document.createElement('div');
+      bubble.className = 'chat-msg chat-msg--' + who;
+      if (who === 'user') {
+        bubble.textContent = html;
+      } else {
+        bubble.innerHTML = html;
+      }
+      messagesEl.appendChild(bubble);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function botReply(text) {
+      window.setTimeout(function () {
+        addMessage(text, 'bot');
+      }, 250);
+    }
+
+    function matchIntent(text) {
+      for (var i = 0; i < intents.length; i++) {
+        if (intents[i].re.test(text)) return answers[intents[i].key];
+      }
+      return answers.fallback;
+    }
+
+    quickChips.forEach(function (label) {
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'chat-chip';
+      chip.textContent = label;
+      chip.addEventListener('click', function () {
+        addMessage(label, 'user');
+        botReply(answers[chipToKey[label]]);
+      });
+      chipsEl.appendChild(chip);
+    });
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var text = input.value.trim();
+      if (!text) return;
+      addMessage(text, 'user');
+      botReply(matchIntent(text));
+      input.value = '';
+    });
+
+    var greeted = false;
+
+    function openChat() {
+      panel.hidden = false;
+      launcher.setAttribute('aria-expanded', 'true');
+      if (!greeted) {
+        greeted = true;
+        botReply('Hi! I’m the Fox Legacy helper. I can point you to pricing, booking, your refund, payments, or the client portal — or connect you with a real person.');
+      }
+      input.focus();
+    }
+
+    function closeChat() {
+      panel.hidden = true;
+      launcher.setAttribute('aria-expanded', 'false');
+      launcher.focus();
+    }
+
+    launcher.addEventListener('click', function () {
+      if (panel.hidden) { openChat(); } else { closeChat(); }
+    });
+
+    closeBtn.addEventListener('click', closeChat);
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !panel.hidden) closeChat();
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     initMobileMenu();
     initQuiz();
     initEstimator();
     initContactForm();
+    initChatbot();
   });
 })();
