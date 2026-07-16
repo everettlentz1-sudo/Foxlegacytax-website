@@ -501,6 +501,71 @@
       return hit.html;
     }
 
+    /* ----- Optional AI upgrade (Gemini via Netlify Function) -----
+       Typed questions are sent to /.netlify/functions/chat, which relays them
+       to Google's Gemini API using a private key. If the function is missing,
+       not configured, slow, or errors, we fall back to the rules engine above
+       — the chat never breaks. */
+
+    var chatHistory = [];
+
+    function rememberExchange(userText, botHtml) {
+      var tmp = document.createElement('div');
+      tmp.innerHTML = botHtml;
+      chatHistory.push({ role: 'user', text: userText });
+      chatHistory.push({ role: 'model', text: tmp.textContent || '' });
+      if (chatHistory.length > 12) chatHistory = chatHistory.slice(-12);
+    }
+
+    /* Render the small markdown subset we allow from the AI: **bold** and
+       [text](url). Everything else is escaped, so replies can't inject HTML. */
+    function mdToHtml(text) {
+      var escaped = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      escaped = escaped.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+|payment\.html|services\.html[^\s)]*|business\.html|resources\.html|contact\.html)\)/g, function (m, label, url) {
+        var cls = url.indexOf('calendar.app.google') !== -1 ? ' class="chat-cta"' : '';
+        var ext = url.indexOf('http') === 0 ? ' target="_blank" rel="noopener"' : '';
+        return '<a href="' + url + '"' + cls + ext + '>' + label + '</a>';
+      });
+
+      escaped = escaped.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      return escaped.replace(/\n/g, '<br>');
+    }
+
+    function showTyping() {
+      var bubble = document.createElement('div');
+      bubble.className = 'chat-msg chat-msg--bot chat-msg--typing';
+      bubble.textContent = '…';
+      messagesEl.appendChild(bubble);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      return bubble;
+    }
+
+    function askAI() {
+      var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      var timer = controller && window.setTimeout(function () { controller.abort(); }, 9000);
+
+      return fetch('/.netlify/functions/chat', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ messages: chatHistory.slice(-10) }),
+        signal: controller ? controller.signal : undefined
+      })
+        .then(function (r) {
+          if (!r.ok) throw new Error('bad status');
+          return r.json();
+        })
+        .then(function (d) {
+          if (!d.reply) throw new Error('empty');
+          return mdToHtml(d.reply);
+        })
+        .catch(function () { return null; })
+        .finally(function () { if (timer) window.clearTimeout(timer); });
+    }
+
     quickChips.forEach(function (label) {
       var chip = document.createElement('button');
       chip.type = 'button';
@@ -509,12 +574,10 @@
       chip.addEventListener('click', function () {
         addMessage(label, 'user');
         var key = chipToKey[label];
-        if (key === lastKey) {
-          botReply(repeatNudge);
-        } else {
-          lastKey = key;
-          botReply(answers[key]);
-        }
+        var html = key === lastKey ? repeatNudge : answers[key];
+        lastKey = key;
+        rememberExchange(label, html);
+        botReply(html);
       });
       chipsEl.appendChild(chip);
     });
@@ -524,8 +587,26 @@
       var text = input.value.trim();
       if (!text) return;
       addMessage(text, 'user');
-      botReply(respond(text));
       input.value = '';
+
+      chatHistory.push({ role: 'user', text: text });
+      var typing = showTyping();
+
+      askAI().then(function (aiHtml) {
+        typing.remove();
+        if (aiHtml) {
+          addMessage(aiHtml, 'bot');
+          var tmp = document.createElement('div');
+          tmp.innerHTML = aiHtml;
+          chatHistory.push({ role: 'model', text: tmp.textContent || '' });
+        } else {
+          chatHistory.pop(); // rules engine keeps its own repetition state
+          var html = respond(text);
+          rememberExchange(text, html);
+          addMessage(html, 'bot');
+        }
+        if (chatHistory.length > 12) chatHistory = chatHistory.slice(-12);
+      });
     });
 
     var greeted = false;

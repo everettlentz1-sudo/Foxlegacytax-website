@@ -1585,6 +1585,17 @@ details.resource-card[open] .chevron {
   border-bottom-right-radius: 4px;
 }
 
+.chat-msg--typing {
+  color: var(--muted);
+  letter-spacing: 3px;
+  animation: typingPulse 1s ease infinite;
+}
+
+@keyframes typingPulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
 .chat-chips {
   display: flex;
   flex-wrap: wrap;
